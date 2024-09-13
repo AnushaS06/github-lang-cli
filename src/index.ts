@@ -1,7 +1,7 @@
 import axios from 'axios';
 import {GITHUB_API_BASE_URL, API_RATE_LIMIT_ERROR, INVALID_GIT_ERROR, NUMBER_OF_LANGUAGES, SUPPORTED_GIT_PROVIDERS} from './constants';
 
-/*
+/**
     Function to fetch repositories from user name
 */
 export const getRepositories =  async(username: string)=>{
@@ -14,7 +14,7 @@ export const getRepositories =  async(username: string)=>{
     }
 }
 
-/*
+/**
     Function to Parse profile name from url
 */
 export const parseProfileUrl = (url: string): string => {
@@ -28,10 +28,15 @@ export const parseProfileUrl = (url: string): string => {
   
     return match[1];
   };
+
+/** 
+ * Function to get top NUMBER_OF_LANGUAGES 
+*/
   
-export const getLanguages = async (gitUrl: string): Promise<string[]> =>{
+export const getLanguages = async (gitUrl: string): Promise<{ language: string; percentage: number; }[]> =>{
     const username = parseProfileUrl(gitUrl);
     const repositories = await getRepositories(username)
+    const totalRepos = repositories.length;
     const languageCount: Record<string, number> = {};
 
     repositories.forEach((repo:{"language": string}) => {
@@ -42,8 +47,11 @@ export const getLanguages = async (gitUrl: string): Promise<string[]> =>{
 
     const sortedLanguages = Object.entries(languageCount)
         .sort((a, b) => b[1] - a[1])
-        .map(entry => entry[0]);
-    
+        .map(([language, count]) => ({
+            language,
+            percentage: (count / totalRepos) * 100
+    }));
+
     return sortedLanguages.slice(0, NUMBER_OF_LANGUAGES);
     
 }
