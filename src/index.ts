@@ -4,7 +4,7 @@ import {GITHUB_API_BASE_URL, API_RATE_LIMIT_ERROR, INVALID_GIT_ERROR, NUMBER_OF_
 /*
     Function to fetch repositories from user name
 */
-const getRepositories =  async(username: string) =>{
+export const getRepositories =  async(username: string)=>{
     try{
         const response = await axios.get(`${GITHUB_API_BASE_URL}/users/${username}/repos`)
         return response.data;
@@ -29,19 +29,12 @@ export const parseProfileUrl = (url: string): string => {
     return match[1];
   };
   
-
-const main = async () =>{
-    const gitUrl = process.argv[2]
-    
-    if(!gitUrl){
-        console.error("Please provide a GitHub profile URL.")
-        return
-    }
+export const getLanguages = async (gitUrl: string): Promise<string[]> =>{
     const username = parseProfileUrl(gitUrl);
     const repositories = await getRepositories(username)
     const languageCount: Record<string, number> = {};
 
-    repositories.forEach(repo => {
+    repositories.forEach((repo:{"language": string}) => {
         if (repo.language) {
         languageCount[repo.language] = (languageCount[repo.language] || 0) + 1;
         }
@@ -51,7 +44,19 @@ const main = async () =>{
         .sort((a, b) => b[1] - a[1])
         .map(entry => entry[0]);
     
-    const mostUsedLanguages =  sortedLanguages.slice(0, NUMBER_OF_LANGUAGES);
+    return sortedLanguages.slice(0, NUMBER_OF_LANGUAGES);
+    
+}
+
+const main = async () =>{
+    const gitUrl = process.argv[2]
+    
+    if(!gitUrl){
+        console.error("Please provide a GitHub profile URL.")
+        return
+    }
+    
+    const mostUsedLanguages = await getLanguages(gitUrl)
     console.log('Top 5 languages used:', mostUsedLanguages);
 }
 
